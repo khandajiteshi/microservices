@@ -21,7 +21,7 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     public void placeOrder(OrderRequest orderRequest){
         System.out.println("orderRequest   "+orderRequest);
@@ -40,10 +40,18 @@ public class OrderService {
         //http://localhost:8082/api/inventory?skuCode=iphone_13&skuCode=iphone_13_red
         //call  inventory service, and place order if product is in stock
         System.out.println("   skuCode   "+skuCode);
-        InventoryResponse[] inventoryResponseArray = webClient.get()
-                .uri("http://localhost:8082/api/inventory",
-                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCode).build())
-                .retrieve().bodyToMono(InventoryResponse[].class)
+//        InventoryResponse[] inventoryResponseArray = webClientBuilder.build().get()
+//                .uri("http://localhost:8082/api/inventory",
+//                        uriBuilder -> uriBuilder.queryParam("skuCode", skuCode).build())
+//                .retrieve().bodyToMono(InventoryResponse[].class)
+//                .block();
+        InventoryResponse[] inventoryResponseArray =  webClientBuilder
+                .baseUrl("http://inventory-service/api/inventory") // Replace with the actual URL of the inventory-service
+                .build()
+                .get()
+                .uri(uriBuilder -> uriBuilder.queryParam("skuCode", skuCode).build())
+                .retrieve()
+                .bodyToMono(InventoryResponse[].class)
                 .block();
 
         boolean allProductInStock = Arrays.stream(inventoryResponseArray).allMatch(InventoryResponse::isInStock);
